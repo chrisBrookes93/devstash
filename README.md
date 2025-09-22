@@ -13,7 +13,6 @@ That means:
 - 🧰 **Mock-friendly cache files** that can be reused as test data, eliminating the need to hit real APIs or recompute fixtures  
 - 🔍 **Transparent storage** in a `.devstash_cache/` folder — easy to inspect, clear, or share  
 - 👥 **Team-ready**: share cached results across machines to save setup time  
-- 📓 **Jupyter-friendly**: mark heavy cells with `# @devstash` to skip them on reruns  
 
 ---
 
@@ -26,12 +25,14 @@ pip install devstash
 ```
 
 ```python
+import time
 import devstash
 
 devstash.activate()  # ✅ enable caching for this run
 
 def slow_function(x):
     print("Running slow_function...")
+    time.sleep(10)
     return x * 2
 
 val = slow_function(10)  # @devstash
@@ -51,7 +52,8 @@ print(val)
 - **Automatic restore**: cached values are re-injected into your program on the next run  
 - **Logging integration**: view caching activity with Python’s logging system  
 - **Zero dependencies** (just Python stdlib)  
-- **Optional TTL (time-to-live)** to expire cache after a given time (e.g. `30m`, `2h`, `1d`, `1w`)  
+- **Optional TTL (time-to-live)** to expire cache after a given time (e.g. `30m`, `2h`, `1d`, `1w`)
+- **Argument-sensitive caching**: separate cache files are created for different function arguments, so `foo(1, 2)` and `foo(2, 3)` won’t overwrite each other’s results.
 
 ---
 

@@ -28,8 +28,14 @@ def activate():
     skip = os.environ.get("DEVSTASH_SKIP_REWRITE", "").lower() in ("1", "true", "yes")
     if main_file.exists() and not skip:
         os.environ["DEVSTASH_ACTIVE"] = "1"
+        warning_banner = """
+==================================================================
+ WARNING: devstash is active!
+ This tool is for DEVELOPMENT ONLY — do not use in production.
+==================================================================
+        """
+        print(warning_banner, file=sys.stderr)
         rewrite_and_run_main(main_file, devstash_cache_call)
-        logger.debug("AST rewritten, devstash active")
 
 
 __all__ = ["activate"]
