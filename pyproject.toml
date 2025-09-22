@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "devstash"
+version = "0.1.0"
+description = "Development-time persistent caching for function calls and variables, to speed up iteration and save money on APIs."
+authors = [
+    { name = "Chris Brookes", email = "chrisb856@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["caching", "development", "debugging", "llm", "api", "productivity"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Utilities",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "ruff>=0.6.9",
+    "build",
+    "pytest",
+]
+
+[project.urls]
+Homepage = "https://github.com/chrisBrookes93/devstash"
+Repository = "https://github.com/chrisBrookes93/devstash"
+Issues = "https://github.com/chrisBrookes93/devstash/issues"
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+fix = true
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+]
+extend-select = ["I"]   # Enable import sorting
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
