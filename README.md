@@ -35,7 +35,7 @@ That means:
 ---
 
 
-## ⚡ Quickstart
+## ⚡ Quickstart <a id="quickstart"></a>
 
 Install and run in seconds:
 
@@ -63,7 +63,7 @@ print(val)
 
 ---
 
-## ✨ Features
+## ✨ Features <a id="quickstart"></a>
 
 - **Cache function return values** with a simple inline marker (`# @devstash`)  
 - **Cache variable assignments** persistently across runs  
@@ -78,9 +78,9 @@ print(val)
 
 ---
 
-## 🔥 Use Cases
+## 🔥 Use Cases <a id="use-cases"></a>
 
-### 🧑‍🔬 Expensive LLM calls
+### 🧑‍🔬 Expensive LLM calls <a id="expensive-llm-calls"></a>
 ```python
 from openai import OpenAI
 import devstash
@@ -97,7 +97,7 @@ summary = client.chat.completions.create(  # @devstash
 print(summary.choices[0].message["content"])
 ```
 
-### 📊 Large file parsing
+### 📊 Large file parsing <a id="large-file-parsing"></a>
 ```python
 from langchain_community.document_loaders import PyPDFLoader
 import devstash
@@ -110,7 +110,7 @@ docs = loader.load()  # @devstash
 print(f"Number of docs: {len(docs)}")
 ```
 
-### 🧮 Machine learning preprocessing
+### 🧮 Machine learning preprocessing <a id="machine-learning-preprocessing"></a>
 ```python
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -127,7 +127,7 @@ X_train, X_test, y_train, y_test = train_test_split(  # @devstash
 print(X_train.shape, X_test.shape)
 ```
 
-### 💾 API responses
+### 💾 API responses <a id="api-responses"></a>
 ```python
 import requests
 import devstash
@@ -141,7 +141,7 @@ repo_info = resp.json()
 print(repo_info["stargazers_count"])
 ```
 
-### ⏳ Cache with Time-To-Live (TTL)
+### ⏳ Cache with Time-To-Live (TTL) <a id="cache-with-time-to-live-ttl"></a>
 You can add an optional `ttl` parameter to your `# @devstash` marker.  
 TTL values can be expressed in **seconds (s), minutes (m), hours (h), days (d), or weeks (w)**.  
 Examples: `30m`, `2h`, `1d`, `1w`.
@@ -164,7 +164,7 @@ print(resp.json()["stargazers_count"])
 
 ---
 
-## 🛠️ How It Works
+## 🛠️ How It Works <a id="how-it-works"></a>
 
 devstash works by transforming your program at runtime:
 
@@ -183,7 +183,7 @@ export DEVSTASH_SKIP_REWRITE=1
 
 ---
 
-## 🖥️ CLI Tools
+## 🖥️ CLI Tools  <a id="cli-tools"></a>
 
 devstash includes a simple CLI for managing your cache:
 
@@ -202,7 +202,7 @@ These commands help inspect or reset caches without manually navigating files.
 
 ---
 
-## 📚 Related Work
+## 📚 Related Work <a id="related-work"></a>
 
 There are several existing Python libraries that provide caching or mocking functionality, but **devstash** takes a different approach designed for day-to-day development convenience.
 
@@ -225,7 +225,7 @@ Unlike the above, **devstash** focuses on *zero-boilerplate caching during devel
 
 ---
 
-## ⚠️ Notes & Limitations
+## ⚠️ Notes & Limitations <a id="notes--limitations"></a>
 
 - devstash is designed for **development/debugging only**, not for production caching.  
 - Cached objects must be **pickle-serializable**.  
@@ -239,7 +239,7 @@ Unlike the above, **devstash** focuses on *zero-boilerplate caching during devel
 
 ---
 
-## 🤝 Contributing
+## 🤝 Contributing <a id="contributing"></a>
 
 Contributions, feedback, and ideas are very welcome!
 
