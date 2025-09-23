@@ -284,4 +284,36 @@ uv run ruff format .
 
 ---
 
+## 📦 Release Process
+
+This project uses [Semantic Versioning](https://semver.org/).  
+Releases are driven by **git tags**: pushing a tag will automatically trigger the GitHub Actions workflow to publish to PyPI and create a GitHub Release.
+
+### Steps to Cut a New Release
+
+1. **Decide the next version** (patch, minor, or major):
+   ```bash
+   uv version --bump patch   # or: minor / major
+   ```
+
+2. **Generate/update the changelog**:
+   ```bash
+   uv run git-cliff -t v$(uv version --short) -o CHANGELOG.md
+   ```
+
+3. **Commit and tag the release**:
+   ```bash
+   git add pyproject.toml CHANGELOG.md
+   git commit -m "chore(release): v$(uv version)"
+   git tag v$(uv version)
+   git push origin main --tags
+   ```
+
+4. **CI/CD takes over**:  
+   - The GitHub Actions workflow builds the package.  
+   - The package is published to PyPI.  
+   - A GitHub Release is created automatically with the changelog.
+
+---
+
 devstash is still evolving, and community input will help shape its direction. Whether it’s catching rough edges, improving performance, or adding new caching strategies — we’d love your help!

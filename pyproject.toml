@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "devstash"
-version = "0.1.0"
+version = "0.1.15"
 description = "Development-time persistent caching for function calls and variables, to speed up iteration and save money on APIs."
 authors = [
     { name = "Chris Brookes", email = "chrisb856@gmail.com" }
@@ -33,7 +33,9 @@ dev-dependencies = [
     "ruff>=0.6.9",
     "build",
     "pytest",
+    "git-changelog>=2.6.3",
 ]
+
 
 [project.urls]
 Homepage = "https://github.com/chrisBrookes93/devstash"
@@ -64,3 +66,4 @@ extend-select = ["I"]   # Enable import sorting
 quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
+
