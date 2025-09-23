@@ -40,6 +40,9 @@ Homepage = "https://github.com/chrisBrookes93/devstash"
 Repository = "https://github.com/chrisBrookes93/devstash"
 Issues = "https://github.com/chrisBrookes93/devstash/issues"
 
+[project.scripts]
+devstash = "devstash.cli:main"
+
 [tool.ruff]
 line-length = 120
 target-version = "py313"

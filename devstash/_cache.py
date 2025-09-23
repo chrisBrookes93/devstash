@@ -1,15 +1,43 @@
 import hashlib
 import logging
+import os
 import pickle
 import re
 import time
 from datetime import timedelta
 from pathlib import Path
 
-CACHE_DIR = Path("./.devstash_cache")
 _TTL_PATTERN = re.compile(r"(?P<value>\d+)(?P<unit>[smhdw])")
 
 logger = logging.getLogger("devstash")
+
+MAX_FILENAME_LENGTH = 200  # safe limit < 255
+CACHE_DIR = Path(os.environ.get("DEVSTASH_CACHE_DIR", "./.devstash_cache"))
+RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL"} | {f"COM{i}" for i in range(1, 10)} | {f"LPT{i}" for i in range(1, 10)}
+
+
+def sanitize_filename(name: str) -> str:
+    """
+    Sanitize filename against unsafe characters and reserved names.
+    """
+    safe = "".join(c if c.isalnum() or c in "._-" else "_" for c in name)
+    if safe.split(".")[0].upper() in RESERVED_NAMES:
+        safe = "_" + safe
+    return safe
+
+
+def safe_filename(name: str) -> str:
+    """
+    Ensure filename is safe and <= MAX_FILENAME_LENGTH.
+    """
+    safe = sanitize_filename(name)
+    if len(safe) <= MAX_FILENAME_LENGTH:
+        return safe
+
+    base, dot, ext = safe.partition(".")
+    h = hashlib.sha256(safe.encode()).hexdigest()[:16]
+    trunc = base[: MAX_FILENAME_LENGTH - len(h) - len(ext) - 2]
+    return f"{trunc}_{h}{dot}{ext}"
 
 
 def parse_ttl(ttl_str: str) -> timedelta:
@@ -55,7 +83,8 @@ def devstash_cache_call(func, *args, ttl: str = None, **kwargs):
     qual = getattr(func, "__qualname__", func.__name__)
     arg_hash = _hash_args_kwargs(args, kwargs)
 
-    filename = f"{mod}__{qual}__{arg_hash}.pkl"
+    base_name = f"{mod}__{qual}__{arg_hash}.pkl"
+    filename = safe_filename(base_name)
     path = CACHE_DIR / filename.replace("<", "_").replace(">", "_")
 
     if path.exists():
