@@ -68,7 +68,7 @@ def clear_cache(all_files: bool = False, pattern: str | None = None):
 
     if all_files:
         shutil.rmtree(CACHE_DIR)
-        print("✅ Cleared all cached entries.")
+        print("Cleared all cached entries.")
         return
 
     files = list(CACHE_DIR.glob("*.pkl"))
@@ -83,7 +83,7 @@ def clear_cache(all_files: bool = False, pattern: str | None = None):
             removed += 1
 
     if removed:
-        print(f"✅ Removed {removed} cache file(s).")
+        print(f"Removed {removed} cache file(s).")
     else:
         print("No matching cache files found.")
 

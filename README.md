@@ -16,6 +16,25 @@ That means:
 
 ---
 
+## Table of Contents
+
+- [Quickstart](#quickstart)
+- [Features](#features)
+- [Use Cases](#use-cases)
+  - [Expensive LLM calls](#expensive-llm-calls)
+  - [Large file parsing](#large-file-parsing)
+  - [Machine learning preprocessing](#machine-learning-preprocessing)
+  - [API responses](#api-responses)
+  - [Cache with Time-To-Live (TTL)](#cache-with-time-to-live-ttl)
+- [How It Works](#how-it-works)
+- [CLI Tools](#cli-tools)
+- [Related Work](#related-work)
+- [Notes & Limitations](#notes--limitations)
+- [Contributing](#contributing)
+
+---
+
+
 ## ⚡ Quickstart
 
 Install and run in seconds:
@@ -48,12 +67,14 @@ print(val)
 
 - **Cache function return values** with a simple inline marker (`# @devstash`)  
 - **Cache variable assignments** persistently across runs  
+- **Argument-sensitive caching**: separate cache entries are created for different function arguments and keyword arguments.  
+- **Safe file handling**: cache filenames are sanitized to avoid injection or invalid filename issues, and truncated to avoid OS filename length limits.  
 - **Transparent disk storage** in a `./.devstash_cache/` folder  
 - **Automatic restore**: cached values are re-injected into your program on the next run  
 - **Logging integration**: view caching activity with Python’s logging system  
 - **Zero dependencies** (just Python stdlib)  
-- **Optional TTL (time-to-live)** to expire cache after a given time (e.g. `30m`, `2h`, `1d`, `1w`)
-- **Argument-sensitive caching**: separate cache files are created for different function arguments, so `foo(1, 2)` and `foo(2, 3)` won’t overwrite each other’s results.
+- **Optional TTL (time-to-live)** to expire cache after a given time (e.g. `30m`, `2h`, `1d`, `1w`)  
+- **Command-line tools**: manage cache files with ease (list, clear, inspect).  
 
 ---
 
@@ -153,6 +174,7 @@ devstash works by transforming your program at runtime:
 4. **Compile and exec**: The rewritten AST is compiled back into Python bytecode and executed in a fresh `__main__` namespace.  
 5. **Persistent storage**: Values are stored on disk using pickle, and automatically restored on subsequent runs.  
 6. **TTL support**: Before reading a cache file, devstash checks its last-modified time. If the file is older than the specified TTL, the cache is refreshed.  
+7. **Safe filenames**: All cache filenames are sanitized to prevent injection and truncated to fit within common OS filename length limits.
 
 👉 If you don’t want rewriting in a certain environment, set:  
 ```bash
@@ -161,34 +183,38 @@ export DEVSTASH_SKIP_REWRITE=1
 
 ---
 
+## 🖥️ CLI Tools
+
+devstash includes a simple CLI for managing your cache:
+
+```bash
+devstash list
+```
+Lists all cached files, including their size, age, and TTL if applicable.
+
+```bash
+devstash clear [-all][--pattern x]
+```
+Clears the entire `.devstash_cache/` directory.
+
+These commands help inspect or reset caches without manually navigating files.
+
+
+---
+
 ## 📚 Related Work
 
 There are several existing Python libraries that provide caching or mocking functionality, but **devstash** takes a different approach designed for day-to-day development convenience.
 
-- **[persist-cache](http://pypi.org/project/persist-cache/)**  
-  A simple decorator-based persistent cache for Python functions.  
-  ✅ Easy to apply with decorators.  
-  ❌ Requires decorating functions, not inline caching with markers. Has the limitation that you can't add decorators to library functions.
+| Tool            | Approach        | Pros                                                                    | Cons |
+|-----------------|-----------------|-------------------------------------------------------------------------|------|
+| [persist-cache](http://pypi.org/project/persist-cache/) | Decorator-based persistent cache | ✅ Easy to apply with decorators                                         | ❌ Requires decorating functions, not inline caching. Cannot decorate external library functions |
+| [joblib](https://joblib.readthedocs.io/) | `Memory.cache()` decorator | ✅ Great for machine learning pipelines                                  | ❌ Requires explicit wrapping/decorating |
+| [diskcache](http://www.grantjenks.com/docs/diskcache/) | Disk-backed dictionary/decorators | ✅ Powerful and flexible                                                 | ❌ More boilerplate, extra setup |
+| [vcrpy](https://github.com/kevin1024/vcrpy) | Records/replays HTTP requests | ✅ Excellent for offline API testing                                     | ❌ Only works for HTTP calls |
+| [pytest-cache](https://docs.pytest.org/en/7.1.x/how-to/cache.html) | pytest-specific cache | ✅ Useful in test environments                                           | ❌ Limited to pytest, not general dev |
+| **devstash** | Inline `# @devstash` marker | ✅ Zero-boilerplate, works (almost) anywhere, argument-sensitive caching | ❌ Development-only, not for production |
 
-- **[joblib](https://joblib.readthedocs.io/)**  
-  Provides a `Memory.cache()` decorator to persist function results on disk.  
-  ✅ Great for machine learning pipelines.  
-  ❌ Requires wrapping or decorating functions explicitly.  
-
-- **[diskcache](http://www.grantjenks.com/docs/diskcache/)**  
-  A disk-backed caching library with dictionary-like APIs and function decorators.  
-  ✅ Powerful and flexible.  
-  ❌ Boilerplate needed to integrate into code.  
-
-- **[vcrpy](https://github.com/kevin1024/vcrpy)**  
-  Records HTTP requests and replays them later for tests.  
-  ✅ Excellent for offline API testing.  
-  ❌ Only works for HTTP calls, not arbitrary function results.  
-
-- **[pytest-cache](https://docs.pytest.org/en/7.1.x/how-to/cache.html)**  
-  Lets you persist values across pytest runs.  
-  ✅ Useful in test environments.  
-  ❌ Limited to pytest, not general development.  
 
 ### 🔑 How devstash is different
 Unlike the above, **devstash** focuses on *zero-boilerplate caching during development*.  
@@ -204,7 +230,6 @@ Unlike the above, **devstash** focuses on *zero-boilerplate caching during devel
 - devstash is designed for **development/debugging only**, not for production caching.  
 - Cached objects must be **pickle-serializable**.  
 - Cache invalidation: delete `.devstash_cache/` if values become stale.  
-- Currently, cache keys are based on **function/variable names** (argument-sensitive caching may be added in future).  
 - Function chaining is **not supported**.  
   E.g. to avoid an API call in `requests.get(url).json()` you must split the `.json()` onto a separate line and apply the marker to the `.get()` call.  
 - **TTL support**: you can specify cache expiry with `ttl=...` in the marker (`# @devstash ttl=30m`). Invalid TTL formats will raise an error. Cache freshness is determined using the **file’s last modified time**.  
