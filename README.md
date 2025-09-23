@@ -63,7 +63,7 @@ print(val)
 
 ---
 
-## ✨ Features <a id="quickstart"></a>
+## ✨ Features <a id="features"></a>
 
 - **Cache function return values** with a simple inline marker (`# @devstash`)  
 - **Cache variable assignments** persistently across runs  
