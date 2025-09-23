@@ -15,7 +15,7 @@ url = "https://api.github.com/repos/langchain-ai/langchain"
 
 # First run: actual GitHub API call
 # Later runs: cached JSON
-resp = requests.get(url)  # @devstash
+resp = requests.get(url)  # @devstash ttl=24h
 repo_info = resp.json()
 
 print(repo_info["stargazers_count"])
