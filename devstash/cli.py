@@ -35,8 +35,8 @@ def list_cache(ttl: str | None = None):
         return
 
     now = time.time()
-    print(f"{'Cache File':60} {'Age':>12} {'TTL Status':>20}")
-    print("-" * 100)
+    print(f"{'Cache File':80} {'Age':>12} {'TTL Status':>20}")
+    print("-" * 120)
 
     for f in files:
         try:
@@ -55,7 +55,7 @@ def list_cache(ttl: str | None = None):
                 except Exception as e:
                     status = f"invalid TTL ({e})"
 
-            print(f"{f.name:60} {age_str:>12} {status:>20}")
+            print(f"{f.name:80} {age_str:>12} {status:>20}")
         except Exception as e:
             print(f"{f.name:60} ERROR: {e}")
 

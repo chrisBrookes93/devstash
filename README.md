@@ -1,6 +1,6 @@
 # devstash
 
-**devstash** is a development-time utility for **persistent caching** of function return values and variable assignments across multiple program executions.  
+**devstash** is a development-time utility for **persistent caching** of function return values across multiple program executions.  
 
 When you’re iterating on code, you often hit the same **slow lines** (e.g. heavy computations, file parsing, data processing) or **expensive lines** (e.g. LLM requests that cost tokens/money). With devstash, you can mark those lines once and cache the results on disk — so the next run reuses the cached values instead of re-executing them.  
 
@@ -23,7 +23,7 @@ That means:
 - [Use Cases](#use-cases)
   - [Expensive LLM calls](#expensive-llm-calls)
   - [Large file parsing](#large-file-parsing)
-  - [Machine learning preprocessing](#machine-learning-preprocessing)
+  - [Machine learning](#machine-learning)
   - [API responses](#api-responses)
   - [Cache with Time-To-Live (TTL)](#cache-with-time-to-live-ttl)
 - [How It Works](#how-it-works)
@@ -66,7 +66,6 @@ print(val)
 ## ✨ Features <a id="features"></a>
 
 - **Cache function return values** with a simple inline marker (`# @devstash`)  
-- **Cache variable assignments** persistently across runs  
 - **Argument-sensitive caching**: separate cache entries are created for different function arguments and keyword arguments.  
 - **Safe file handling**: cache filenames are sanitized to avoid injection or invalid filename issues, and truncated to avoid OS filename length limits.  
 - **Transparent disk storage** in a `./.devstash_cache/` folder  
@@ -110,21 +109,36 @@ docs = loader.load()  # @devstash
 print(f"Number of docs: {len(docs)}")
 ```
 
-### 🧮 Machine learning preprocessing <a id="machine-learning-preprocessing"></a>
+### 🧮 Machine learning <a id="machine-learning"></a>
 ```python
+import logging, time
+from sklearn.datasets import fetch_openml
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import train_test_split
-import numpy as np
 import devstash
 
 devstash.activate()
 
-data = np.random.randn(1_000_000, 10)
-labels = np.random.randint(0, 2, 1_000_000)
+start = time.time()
 
-X_train, X_test, y_train, y_test = train_test_split(  # @devstash
-    data, labels, test_size=0.2
-)
-print(X_train.shape, X_test.shape)
+X, y = fetch_openml("mnist_784", version=1, return_X_y=True, as_frame=False, parser="liac-arff") # @devstash
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42) # @devstash
+pipe = make_pipeline(PCA(n_components=50), LogisticRegression(max_iter=2000))
+pipe.fit(X_train, y_train)  # @devstash
+acc = pipe.score(X_test, y_test) # @devstash
+
+print(f"Accuracy: {acc:.3f}")
+print("Program execution time: %.2f s" % (time.time() - start))
+
+# Output from the first run when the cache is cold:
+# Accuracy: 0.908
+# Program execution time: 29.67 s
+
+# Output from the second run when the cache is warm:
+# Accuracy: 0.908
+# Program execution time: 0.68 s
 ```
 
 ### 💾 API responses <a id="api-responses"></a>
@@ -135,7 +149,7 @@ import devstash
 devstash.activate()
 
 url = "https://api.github.com/repos/langchain-ai/langchain"
-resp = requests.get(url)  # @devstash
+resp = requests.get(url)  # @devstash ttl=24h
 repo_info = resp.json()
 
 print(repo_info["stargazers_count"])
@@ -170,7 +184,7 @@ devstash works by transforming your program at runtime:
 
 1. **Explicit activation**: When you call `devstash.activate()`, it reads your main script (the entrypoint in `sys.argv[0]`).  
 2. **Build an AST**: The code is parsed into an Abstract Syntax Tree (AST), a structured representation of your Python source.  
-3. **Rewrite annotated lines**: Calls or assignments marked with `# @devstash` are rewritten to wrap them with the persistent cache helper.  
+3. **Rewrite annotated lines**: Function calls marked with `# @devstash` are rewritten to wrap them with the persistent cache helper.  
 4. **Compile and exec**: The rewritten AST is compiled back into Python bytecode and executed in a fresh `__main__` namespace.  
 5. **Persistent storage**: Values are stored on disk using pickle, and automatically restored on subsequent runs.  
 6. **TTL support**: Before reading a cache file, devstash checks its last-modified time. If the file is older than the specified TTL, the cache is refreshed.  
@@ -188,14 +202,23 @@ export DEVSTASH_SKIP_REWRITE=1
 devstash includes a simple CLI for managing your cache:
 
 ```bash
-devstash list
+$ devstash list --ttl 1m                                                                                                                          [19:49:21]
+Cache File                                                                                Age           TTL Status
+------------------------------------------------------------------------------------------------------------------------
+openai.resources.embeddings__Embeddings.create__1e53b9c3f5768615.pkl                    5m 8s        expired (>1m)
+langchain_core.document_loaders.base__BaseLoader.load__d019ca77b2cac706.pkl                5s         valid (<=1m)
+sklearn.model_selection._split__train_test_split__17b58b2de4f4cff9.pkl                    13s         valid (<=1m)
+requests.api__get__0c4579007009458c.pkl                                                5m 13s        expired (>1m)                                             4m 48s                valid
 ```
 Lists all cached files, including their size, age, and TTL if applicable.
 
 ```bash
-devstash clear [-all][--pattern x]
+$ devstash clear clear --pattern openai.resources.embeddings__Embeddings.create__1e53b9c3f5768615.pkl
+Removed 1 cache file(s).
+$ devstash clear --all                                                                                                                            [19:43:00]
+Cleared all cached entries.
 ```
-Clears the entire `.devstash_cache/` directory.
+Clears out files from the `./.devstash_cache/` directory.
 
 These commands help inspect or reset caches without manually navigating files.
 
@@ -220,7 +243,7 @@ There are several existing Python libraries that provide caching or mocking func
 Unlike the above, **devstash** focuses on *zero-boilerplate caching during development*.  
 - Just add `# @devstash` to a line of code.  
 - No decorators, wrappers, or test frameworks required.  
-- Works with any function return value or assignment that is pickle-serializable.  
+- Works with any function return value that is pickle-serializable.  
 - Optimized for saving time and cost during *iterative coding*, not for production.  
 
 ---
@@ -229,7 +252,7 @@ Unlike the above, **devstash** focuses on *zero-boilerplate caching during devel
 
 - devstash is designed for **development/debugging only**, not for production caching.  
 - Cached objects must be **pickle-serializable**.  
-- Cache invalidation: delete `.devstash_cache/` if values become stale.  
+- Cache invalidation: delete `./.devstash_cache/` if values become stale.  
 - Function chaining is **not supported**.  
   E.g. to avoid an API call in `requests.get(url).json()` you must split the `.json()` onto a separate line and apply the marker to the `.get()` call.  
 - **TTL support**: you can specify cache expiry with `ttl=...` in the marker (`# @devstash ttl=30m`). Invalid TTL formats will raise an error. Cache freshness is determined using the **file’s last modified time**.  
@@ -288,31 +311,7 @@ uv run ruff format .
 
 This project uses [Semantic Versioning](https://semver.org/).  
 Releases are driven by **git tags**: pushing a tag will automatically trigger the GitHub Actions workflow to publish to PyPI and create a GitHub Release.
-
-### Steps to Cut a New Release
-
-1. **Decide the next version** (patch, minor, or major):
-   ```bash
-   uv version --bump patch   # or: minor / major
-   ```
-
-2. **Generate/update the changelog**:
-   ```bash
-   uv run git-cliff -t v$(uv version --short) -o CHANGELOG.md
-   ```
-
-3. **Commit and tag the release**:
-   ```bash
-   git add pyproject.toml CHANGELOG.md
-   git commit -m "chore(release): v$(uv version)"
-   git tag v$(uv version)
-   git push origin main --tags
-   ```
-
-4. **CI/CD takes over**:  
-   - The GitHub Actions workflow builds the package.  
-   - The package is published to PyPI.  
-   - A GitHub Release is created automatically with the changelog.
+To bump the package version, update the changelog and push a tag, run the `./release.sh` script.
 
 ---
 

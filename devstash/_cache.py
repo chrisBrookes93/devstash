@@ -98,19 +98,22 @@ def devstash_cache_call(func, *args, ttl: str = None, **kwargs):
                         return pickle.load(f)
                 else:
                     logger.debug(f"[devstash] Cache expired (age {age:.0f}s > {ttl}), refreshing...")
-            except Exception as e:
-                logger.warning(f"[devstash] Failed to apply TTL ({ttl}): {e}")
+            except Exception:
+                logger.exception("[devstash] Failed to fetch cache file from disk")
         else:
-            with open(path, "rb") as f:
-                logger.debug(f"[devstash] Cache hit, loading from {path}")
-                return pickle.load(f)
+            try:
+                with open(path, "rb") as f:
+                    logger.debug(f"[devstash] Cache hit, loading from {path}")
+                    return pickle.load(f)
+            except Exception:
+                logger.exception("[devstash] Failed to fetch cache file from disk")
 
-    # Cache miss or expired
+    # Cache miss or expired, call the actual function
     logger.debug("[devstash] No valid cache available, calling actual...")
     result = func(*args, **kwargs)
 
     try:
-        CACHE_DIR.mkdir(exist_ok=True)
+        CACHE_DIR.mkdir(exist_ok=True, parents=True)
         with open(path, "wb") as f:
             pickle.dump(result, f)
             logger.debug(f"[devstash] Saved result to {path}")
