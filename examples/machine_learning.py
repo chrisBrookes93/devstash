@@ -25,7 +25,7 @@ print(f"Accuracy: {acc:.3f}")
 print("Program execution time: %.2f s" % (time.time() - start))
 
 # Output from the second run when the cache is warm:
-# #Accuracy: 0.908
+# Accuracy: 0.908
 # Program execution time: 29.67 s
 
 # Output from the second run when the cache is warm:

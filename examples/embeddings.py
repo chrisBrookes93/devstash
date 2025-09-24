@@ -19,8 +19,8 @@ docs = [
     "OpenAI provides high-quality embedding models.",
 ]
 
-# First run: calls OpenAI API for embeddings (costs tokens 💸)
-# Later runs: instantly reloads cached embeddings (0 tokens 💾)
+# First run: calls OpenAI API for embeddings (costs tokens)
+# Later runs: instantly reloads cached embeddings (0 tokens)
 response = client.embeddings.create(  # @devstash
     model="text-embedding-3-small", input=docs
 )

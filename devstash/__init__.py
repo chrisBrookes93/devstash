@@ -25,7 +25,7 @@ def activate():
         return
     main_file = Path(sys.argv[0])
 
-    skip = os.environ.get("DEVSTASH_SKIP_REWRITE", "").lower() in ("1", "true", "yes")
+    skip = os.environ.get("DEVSTASH_SKIP_REWRITE", "").strip().lower() in ("1", "true", "yes")
     if main_file.exists() and not skip:
         os.environ["DEVSTASH_ACTIVE"] = "1"
         warning_banner = """
